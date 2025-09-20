@@ -1,8 +1,14 @@
-import Effect from "./effect";
+import FlowFieldEffect from "./effect.js";
 
-const canvas = document.querySelector("canvas");
-const ctx = canvas.getContext("2d");
-const effect = new Effect(ctx);
+window.onload = async function () {
+  const canvas = document.querySelector("canvas");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 
-ctx.canvas.width = window.innerWidth;
-ctx.canvas.height = window.innerHeight;
+  const artGenerator = new FlowFieldEffect(canvas.getContext("2d"));
+  await artGenerator.init("./shapes.jpg");
+  artGenerator.render();
+  // TO DO: add catch
+};
+
+// ---------------------------------------------------
