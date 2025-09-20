@@ -13,6 +13,7 @@ export default class Particle {
 
   // --------------
   draw() {
+    if (this.history.length === 0) return;
     // get color from the original image at the particle's location
     const imgX = Math.floor(
       (this.x / this.effect.width) * this.effect.imgWidth
@@ -78,8 +79,3 @@ export default class Particle {
     this.history = [];
   }
 }
-
-// NOTES
-// angle can be used to achieve different patterns
-// standard mathematical convention uses cos for the horizontal component (x) and sin for the vertical component (y)
-//  this is based on the unit circle, where a point's coordinates are defined by (cos(θ),sin(θ)), with the angle θ starting from the positive X-axis
