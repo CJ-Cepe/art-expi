@@ -7,8 +7,6 @@ export default class FlowFieldEffect {
   particleCount = 1000;
   cellSize = 50;
 
-  rows = 0;
-  cols = 0;
   imageData = null;
   imgWidth = 0;
   imgHeight = 0;
@@ -18,6 +16,8 @@ export default class FlowFieldEffect {
     this.context = context;
     this.height = this.canvas.height;
     this.width = this.canvas.width;
+    this.rows = Math.ceil(this.height / this.cellSize);
+    this.cols = Math.ceil(this.width / this.cellSize);
   }
 
   // --------------
@@ -44,7 +44,7 @@ export default class FlowFieldEffect {
           this.imgHeight
         ).data;
 
-        this.prepareBoard();
+        this.generateParticles();
         this.calculateField();
         resolve();
       };
@@ -57,12 +57,7 @@ export default class FlowFieldEffect {
   }
 
   // --------------
-  prepareBoard() {
-    // 1. calc # of rows/cells by dividing window size by set cellsize
-    this.rows = Math.ceil(this.height / this.cellSize);
-    this.cols = Math.ceil(this.width / this.cellSize);
-
-    // 2. create particles & push to particles collection
+  generateParticles() {
     for (let i = 0; i < this.particleCount; i++) {
       this.particles.push(new Particle(this));
     }
@@ -71,13 +66,11 @@ export default class FlowFieldEffect {
   // --------------
   calculateField() {
     this.flowField = [];
-    const rows = Math.ceil(this.canvas.height / this.cellSize);
-    const cols = Math.ceil(this.canvas.width / this.cellSize);
 
-    for (let y = 0; y < rows; y++) {
-      for (let x = 0; x < cols; x++) {
-        const imgX = Math.floor((x / cols) * this.imgWidth);
-        const imgY = Math.floor((y / rows) * this.imgHeight);
+    for (let y = 0; y < this.rows; y++) {
+      for (let x = 0; x < this.cols; x++) {
+        const imgX = Math.floor((x / this.cols) * this.imgWidth);
+        const imgY = Math.floor((y / this.rows) * this.imgHeight);
         const imgIndex = (imgY * this.imgWidth + imgX) * 4;
 
         const r = this.imageData[imgIndex];
