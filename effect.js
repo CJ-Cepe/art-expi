@@ -72,7 +72,6 @@ export default class FlowFieldEffect {
         const imgX = Math.floor((x / this.cols) * this.imgWidth);
         const imgY = Math.floor((y / this.rows) * this.imgHeight);
         const imgIndex = (imgY * this.imgWidth + imgX) * 4;
-
         const r = this.imageData[imgIndex];
         const g = this.imageData[imgIndex + 1];
         const b = this.imageData[imgIndex + 2];

@@ -12,31 +12,6 @@ export default class Particle {
   }
 
   // --------------
-  draw() {
-    if (this.history.length === 0) return;
-    // get color from the original image at the particle's location
-    const imgX = Math.floor(
-      (this.x / this.effect.width) * this.effect.imgWidth
-    );
-    const imgY = Math.floor(
-      (this.y / this.effect.height) * this.effect.imgHeight
-    );
-    const imgIndex = (imgY * this.effect.imgWidth + imgX) * 4;
-    const r = this.effect.imageData[imgIndex];
-    const g = this.effect.imageData[imgIndex + 1];
-    const b = this.effect.imageData[imgIndex + 2];
-    this.context.strokeStyle = `rgb(${r}, ${g}, ${b})`;
-
-    // drawing the line based on history
-    this.context.beginPath();
-    this.context.moveTo(this.history[0].x, this.history[0].y);
-    for (let i = 0; i < this.history.length; i++) {
-      this.context.lineTo(this.history[i].x, this.history[i].y);
-    }
-    this.context.stroke();
-  }
-
-  // --------------
   update() {
     // locate where the particle is in the grid cells
     let x = Math.floor(this.x / this.effect.cellSize);
@@ -69,8 +44,32 @@ export default class Particle {
     }
   }
 
+  // --------------
+  draw() {
+    if (this.history.length === 0) return;
+    // get color from the original image at the particle's location
+    /*    const imgX = Math.floor(
+      (this.x / this.effect.width) * this.effect.imgWidth
+    );
+    const imgY = Math.floor(
+      (this.y / this.effect.height) * this.effect.imgHeight
+    );
+    const imgIndex = (imgY * this.effect.imgWidth + imgX) * 4;
+    const r = this.effect.imageData[imgIndex];
+    const g = this.effect.imageData[imgIndex + 1];
+    const b = this.effect.imageData[imgIndex + 2];
+    this.context.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+ */
+    // drawing the line based on history
+    this.context.beginPath();
+    this.context.moveTo(this.history[0].x, this.history[0].y);
+    for (let i = 0; i < this.history.length; i++) {
+      this.context.lineTo(this.history[i].x, this.history[i].y);
+    }
+    this.context.stroke();
+  }
+
   // --------
-  // resets the particle to a new random position
   reset() {
     this.x = Math.random() * this.effect.width;
     this.y = Math.random() * this.effect.height;
