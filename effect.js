@@ -4,8 +4,11 @@ export default class FlowFieldEffect {
   particles = [];
   flowField = [];
 
-  particleCount = 1000;
-  cellSize = 50;
+  particleCount = 2000; // number of particles (500 - 2000)
+  cellSize = 10; // size of each grid cell (5 - 50)
+  flowStrength = 0.1; // base leftto right flow speed (0.1 - 1)
+  curlScale = 0.009; // how much the curl affects the flow (0.01 - 0.1)
+  falloffExponent = 1.5; // controls how fast the curl influence drops off (1 - 5)
 
   imageData = null;
   imgWidth = 0;
@@ -20,6 +23,14 @@ export default class FlowFieldEffect {
     this.cols = Math.ceil(this.width / this.cellSize);
   }
 
+  // vector field definition for curl ---
+  vectorField(x, y) {
+    return {
+      x: y,
+      y: -x,
+    };
+  }
+
   // --------------
   async init(imageUrl) {
     const image = new Image();
@@ -31,7 +42,7 @@ export default class FlowFieldEffect {
         this.imgWidth = image.width;
         this.imgHeight = image.height;
 
-        // Create a temporary hidden canvas to read pixel data
+        // create a temporary hidden canvas to read pixel data
         const tempCanvas = document.createElement("canvas");
         const tempCtx = tempCanvas.getContext("2d");
         tempCanvas.width = this.imgWidth;
@@ -66,27 +77,44 @@ export default class FlowFieldEffect {
   // --------------
   calculateField() {
     this.flowField = [];
+    const centerX = this.width / 2;
+    const centerY = this.height / 2;
+    const maxDistance = Math.sqrt(
+      (this.width / 2) ** 2 + (this.height / 2) ** 2
+    );
 
     for (let y = 0; y < this.rows; y++) {
       for (let x = 0; x < this.cols; x++) {
-        const imgX = Math.floor((x / this.cols) * this.imgWidth);
-        const imgY = Math.floor((y / this.rows) * this.imgHeight);
-        const imgIndex = (imgY * this.imgWidth + imgX) * 4;
-        const r = this.imageData[imgIndex];
-        const g = this.imageData[imgIndex + 1];
-        const b = this.imageData[imgIndex + 2];
+        // Calculate the cell's position in screen coordinates
+        const cellScreenX = x * this.cellSize + this.cellSize / 2;
+        const cellScreenY = y * this.cellSize + this.cellSize / 2;
 
-        // calc brightness
-        const brightness = (r + g + b) / 3;
+        // Calculate the distance from the center
+        const distance = Math.sqrt(
+          (cellScreenX - centerX) ** 2 + (cellScreenY - centerY) ** 2
+        );
 
-        // map brightness to angle and magnitude
-        const angle = (brightness / 255) * Math.PI * 2;
-        const magnitude = brightness / 255;
+        // Create a falloff factor: 1 at the center, approaching 0 at the edges
+        const falloff = 1 - Math.min(distance / maxDistance, 1);
+        const falloffFactor = Math.pow(falloff, this.falloffExponent);
 
-        this.flowField.push({
-          x: Math.cos(angle) * magnitude,
-          y: Math.sin(angle) * magnitude,
-        });
+        // The curl vector is based on relative coordinates from the center
+        const cellCurlX = (cellScreenX - centerX) / this.cellSize;
+        const cellCurlY = (cellScreenY - centerY) / this.cellSize;
+
+        // 1. Get the base vector (left to right)
+        const baseVector = { x: this.flowStrength, y: 0 };
+
+        // 2. Get the raw curl vector
+        const curlVector = this.vectorField(cellCurlX, cellCurlY);
+
+        // 3. Combine the two vectors, applying both curlScale and the distance falloff
+        const finalVector = {
+          x: baseVector.x + curlVector.x * this.curlScale * falloffFactor,
+          y: baseVector.y + curlVector.y * this.curlScale * falloffFactor,
+        };
+
+        this.flowField.push(finalVector);
       }
     }
   }
@@ -95,18 +123,8 @@ export default class FlowFieldEffect {
   render() {
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.particles.forEach((particle) => {
-      particle.update();
       particle.draw();
-
-      // boundary conditions: wrap around the canvas
-      if (
-        particle.x < 0 ||
-        particle.x > this.canvas.width ||
-        particle.y < 0 ||
-        particle.y > this.canvas.height
-      ) {
-        particle.reset();
-      }
+      particle.update();
     });
 
     requestAnimationFrame(this.render.bind(this));
