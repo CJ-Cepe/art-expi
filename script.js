@@ -1,4 +1,4 @@
-import FlowFieldEffect from "./effect.js";
+import FlowFieldEffect from "./flow-field-effect.js";
 
 window.onload = async function () {
   const canvas = document.querySelector("canvas");
@@ -7,6 +7,6 @@ window.onload = async function () {
   canvas.height = window.innerHeight;
 
   const artGenerator = new FlowFieldEffect(context);
-  await artGenerator.init("./shapes.jpg");
+  artGenerator.init();
   artGenerator.render();
 };
