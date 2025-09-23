@@ -4,15 +4,20 @@ export default class FlowFieldEffect {
   particles = [];
   flowField = [];
 
-  particleCount = 2000; // number of particles (500 - 2000)
-  cellSize = 10; // size of each grid cell (5 - 50)
-  flowStrength = 0.1; // base leftto right flow speed (0.1 - 1)
-  curlScale = 0.009; // how much the curl affects the flow (0.01 - 0.1)
-  falloffExponent = 1.5; // controls how fast the curl influence drops off (1 - 5)
+  particleCount = 2000; // 500 - 2000
+  cellSize = 5; // 5 - 50
+  flowStrength = 0.2; // 0.1 - 1
+  curlScale = 0.05; // 0.01 - 0.1
 
   imageData = null;
   imgWidth = 0;
   imgHeight = 0;
+
+  curlPoints = [
+    { x: 0.8, y: 0.3, innerRadius: 50, radius: 200, falloffExponent: 3 },
+    { x: 0.2, y: 0.6, innerRadius: 10, radius: 400, falloffExponent: 4 },
+    { x: 0.6, y: 0.7, innerRadius: 10, radius: 200, falloffExponent: 2 },
+  ];
 
   constructor(context) {
     this.canvas = context.canvas;
@@ -23,7 +28,6 @@ export default class FlowFieldEffect {
     this.cols = Math.ceil(this.width / this.cellSize);
   }
 
-  // vector field definition for curl ---
   vectorField(x, y) {
     return {
       x: y,
@@ -42,7 +46,6 @@ export default class FlowFieldEffect {
         this.imgWidth = image.width;
         this.imgHeight = image.height;
 
-        // create a temporary hidden canvas to read pixel data
         const tempCanvas = document.createElement("canvas");
         const tempCtx = tempCanvas.getContext("2d");
         tempCanvas.width = this.imgWidth;
@@ -77,41 +80,58 @@ export default class FlowFieldEffect {
   // --------------
   calculateField() {
     this.flowField = [];
-    const centerX = this.width / 2;
-    const centerY = this.height / 2;
-    const maxDistance = Math.sqrt(
-      (this.width / 2) ** 2 + (this.height / 2) ** 2
-    );
+    const maxDistance = Math.hypot(this.width / 2, this.height / 2);
 
     for (let y = 0; y < this.rows; y++) {
       for (let x = 0; x < this.cols; x++) {
-        // Calculate the cell's position in screen coordinates
         const cellScreenX = x * this.cellSize + this.cellSize / 2;
         const cellScreenY = y * this.cellSize + this.cellSize / 2;
 
-        // Calculate the distance from the center
-        const distance = Math.sqrt(
-          (cellScreenX - centerX) ** 2 + (cellScreenY - centerY) ** 2
-        );
+        let summedCurlVector = { x: 0, y: 0 };
 
-        // Create a falloff factor: 1 at the center, approaching 0 at the edges
-        const falloff = 1 - Math.min(distance / maxDistance, 1);
-        const falloffFactor = Math.pow(falloff, this.falloffExponent);
+        // Loop through each curl point and sum their influences
+        for (const curlPoint of this.curlPoints) {
+          const curlPointX = curlPoint.x * this.width;
+          const curlPointY = curlPoint.y * this.height;
 
-        // The curl vector is based on relative coordinates from the center
-        const cellCurlX = (cellScreenX - centerX) / this.cellSize;
-        const cellCurlY = (cellScreenY - centerY) / this.cellSize;
+          const distance = Math.hypot(
+            cellScreenX - curlPointX,
+            cellScreenY - curlPointY
+          );
+
+          let falloffFactor = 0;
+          if (distance < curlPoint.innerRadius) {
+            // Full influence inside the inner radius
+            falloffFactor = 1;
+          } else if (distance < curlPoint.radius) {
+            // Exponentially fade the influence in the transition zone
+            const normalizedDistance =
+              (distance - curlPoint.innerRadius) /
+              (curlPoint.radius - curlPoint.innerRadius);
+            falloffFactor = Math.pow(
+              1 - normalizedDistance,
+              curlPoint.falloffExponent
+            );
+          }
+
+          if (falloffFactor > 0) {
+            const cellCurlX = (cellScreenX - curlPointX) / this.cellSize;
+            const cellCurlY = (cellScreenY - curlPointY) / this.cellSize;
+
+            const curlVector = this.vectorField(cellCurlX, cellCurlY);
+
+            summedCurlVector.x += curlVector.x * this.curlScale * falloffFactor;
+            summedCurlVector.y += curlVector.y * this.curlScale * falloffFactor;
+          }
+        }
 
         // 1. Get the base vector (left to right)
         const baseVector = { x: this.flowStrength, y: 0 };
 
-        // 2. Get the raw curl vector
-        const curlVector = this.vectorField(cellCurlX, cellCurlY);
-
-        // 3. Combine the two vectors, applying both curlScale and the distance falloff
+        // 2. Combine the base and summed curl vectors
         const finalVector = {
-          x: baseVector.x + curlVector.x * this.curlScale * falloffFactor,
-          y: baseVector.y + curlVector.y * this.curlScale * falloffFactor,
+          x: baseVector.x + summedCurlVector.x,
+          y: baseVector.y + summedCurlVector.y,
         };
 
         this.flowField.push(finalVector);
