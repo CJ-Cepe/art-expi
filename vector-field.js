@@ -1,4 +1,7 @@
 export default class VectorField {
+  waveAmplitude = 0.09; // how tall the waves are
+  waveFrequency = 0.01; // how frequent the waves are (smaller = smoother)
+
   constructor(effect, x, y) {
     this.effect = effect;
     this.x = x;
@@ -8,13 +11,14 @@ export default class VectorField {
   calculateVector() {
     const { cellSize, width, height, curlPoints, flowStrength } = this.effect;
 
+    // pixel coords of the grid cell's center
     const cellScreenX = this.x * cellSize + cellSize / 2;
     const cellScreenY = this.y * cellSize + cellSize / 2;
 
     let summedCurlVector = { x: 0, y: 0 };
 
-    // loop through each curl point and sum their influences
     for (const curlPoint of curlPoints) {
+      // 1. calcylate distance between curl center & current grid cell's center
       const curlPointX = curlPoint.x * width;
       const curlPointY = curlPoint.y * height;
 
@@ -23,12 +27,13 @@ export default class VectorField {
         cellScreenY - curlPointY
       );
 
+      // 2. calculate falloffFactor
       let falloffFactor = 0;
       if (distance < curlPoint.innerRadius) {
-        // full influence inside the inner radius
+        // within inner radius
         falloffFactor = 1;
       } else if (distance < curlPoint.radius) {
-        // exponentially fade the influence in the transition zone
+        // between inner radius and radius
         const normalizedDistance =
           (distance - curlPoint.innerRadius) /
           (curlPoint.radius - curlPoint.innerRadius);
@@ -38,10 +43,11 @@ export default class VectorField {
         );
       }
 
+      // 3. calculate curlVector
       if (falloffFactor > 0) {
-        // the vector is based on relative coordinates from the curl point
-        const cellCurlX = cellScreenX - curlPointX; /* / this.cellSize; */
-        const cellCurlY = cellScreenY - curlPointY; /* / this.cellSize; */
+        // if affected by the curl
+        const cellCurlX = cellScreenX - curlPointX;
+        const cellCurlY = cellScreenY - curlPointY;
 
         const curlVector = this.vectorField(
           cellCurlX,
@@ -49,6 +55,7 @@ export default class VectorField {
           curlPoint.rotateClockwise
         );
 
+        // scale curlvector by the strenght and falloffFactor
         summedCurlVector.x +=
           curlVector.x * curlPoint.curlScale * falloffFactor;
         summedCurlVector.y +=
@@ -56,10 +63,12 @@ export default class VectorField {
       }
     }
 
-    // get the base vector (left to right)
-    const baseVector = { x: flowStrength, y: 0 };
+    // add base - wavy left to right
+    const baseVector = {
+      x: flowStrength,
+      y: -Math.sin(cellScreenX * this.waveFrequency) * this.waveAmplitude,
+    };
 
-    // final vector to be pushed in the flowfield
     return {
       x: baseVector.x + summedCurlVector.x,
       y: baseVector.y + summedCurlVector.y,
