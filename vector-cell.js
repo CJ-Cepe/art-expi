@@ -1,4 +1,4 @@
-export default class VectorField {
+export default class VectorCell {
   waveAmplitude = 0.09; // how tall the waves are
   waveFrequency = 0.01; // how frequent the waves are (smaller = smoother)
 
@@ -49,7 +49,7 @@ export default class VectorField {
         const cellCurlX = cellScreenX - curlPointX;
         const cellCurlY = cellScreenY - curlPointY;
 
-        const curlVector = this.vectorField(
+        const curlVector = this.createPerpendicularVector(
           cellCurlX,
           cellCurlY,
           curlPoint.rotateClockwise
@@ -75,7 +75,7 @@ export default class VectorField {
     };
   }
 
-  vectorField(x, y, rotateClockwise) {
+  createPerpendicularVector(x, y, rotateClockwise) {
     return rotateClockwise ? { x: y, y: -x } : { x: -y, y: x };
   }
 }
