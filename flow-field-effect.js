@@ -2,12 +2,20 @@ import Particle from "./particle.js";
 import VectorCell from "./vector-cell.js";
 
 export default class FlowFieldEffect {
-  particles = [];
+  // 1. base vector fields
   flowField = [];
-
-  particleCount = 3000;
   cellSize = 5;
+  waveAmplitude = 0.09; // how tall the waves are
+  waveFrequency = 0.01; // how frequent the waves are (smaller = smoother)
+
+  // 2. particle generation fields
+  particleCount = 3000;
+  particles = [];
+  jitter = 1;
+
+  // 3. particle movement fields
   flowStrength = 0.1;
+  maxStrength = 1;
 
   constructor(context) {
     this.canvas = context.canvas;
@@ -17,7 +25,7 @@ export default class FlowFieldEffect {
     this.rows = Math.ceil(this.height / this.cellSize);
     this.cols = Math.ceil(this.width / this.cellSize);
     this.curlPoints = [
-      {
+      /*   {
         x: 0.3,
         y: 0.6,
         innerRadius: 100,
@@ -61,7 +69,7 @@ export default class FlowFieldEffect {
         falloffExponent: 1,
         curlScale: 0.3,
         rotateClockwise: false,
-      },
+      }, */
     ];
   }
 
@@ -76,12 +84,8 @@ export default class FlowFieldEffect {
     this.particles = [];
     const cells = [];
 
-    // to remove
-    const cols = Math.floor(this.width / this.cellSize);
-    const rows = Math.floor(this.height / this.cellSize);
-
-    for (let y = 0; y < rows; y++) {
-      for (let x = 0; x < cols; x++) {
+    for (let y = 0; y < this.rows; y++) {
+      for (let x = 0; x < this.cols; x++) {
         cells.push({ x, y });
       }
     }
@@ -92,7 +96,7 @@ export default class FlowFieldEffect {
       [cells[i], cells[j]] = [cells[j], cells[i]];
     }
 
-    const jitter = this.cellSize * 0;
+    const jitter = this.cellSize * this.jitter;
 
     // pick first N shuffled cells
     for (let i = 0; i < this.particleCount && i < cells.length; i++) {

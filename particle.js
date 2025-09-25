@@ -1,17 +1,15 @@
 export default class Particle {
-  vx = 0; // The particle's horizontal velocity
-  vy = 0; // The particle's vertical velocity
   maxLength = Math.floor(Math.random() * (30 - 10 + 1)) + 50;
   timer = Math.floor(Math.random() * this.maxLength * 2);
   particleWidth = 1;
-  speed = 4;
+  vx = 4;
+  vy = 4;
 
   constructor(effect, px, py) {
     this.effect = effect;
     this.context = effect.context;
-    // TODO: edit fields
-    this.startingX = px; /* Math.floor(Math.random() * this.effect.width); */
-    this.startingY = py; /* Math.floor(Math.random() * this.effect.height); */
+    this.startingX = px;
+    this.startingY = py;
     this.x = this.startingX;
     this.y = this.startingY;
     this.history = [{ x: this.x, y: this.y }];
@@ -47,31 +45,31 @@ export default class Particle {
 
       if (forceVector) {
         // cause particles gets squished & stretch when rotating curls
-        const v = { x: forceVector.x, y: forceVector.y };
+        const vector = { x: forceVector.x, y: forceVector.y };
 
         // normalize
-        const mag = Math.hypot(v.x, v.y);
+        const mag = Math.hypot(vector.x, vector.y);
         if (mag > 0) {
-          v.x /= mag;
-          v.y /= mag;
+          vector.x /= mag;
+          vector.y /= mag;
         }
 
         // scale
         const strength = this.effect.flowStrength ?? 1.0;
-        v.x *= strength;
-        v.y *= strength;
+        vector.x *= strength;
+        vector.y *= strength;
 
         // clamp
         const maxStrength = this.effect.maxStrength ?? 2.0;
-        const newMag = Math.hypot(v.x, v.y);
+        const newMag = Math.hypot(vector.x, vector.y);
         if (newMag > maxStrength) {
-          v.x = (v.x / newMag) * maxStrength;
-          v.y = (v.y / newMag) * maxStrength;
+          vector.x = (vector.x / newMag) * maxStrength;
+          vector.y = (vector.y / newMag) * maxStrength;
         }
 
         // apply to particle
-        this.x += v.x * this.speed;
-        this.y += v.y * this.speed;
+        this.x += vector.x * this.vx;
+        this.y += vector.y * this.vy;
       }
 
       // push new x and y

@@ -1,9 +1,8 @@
 export default class VectorCell {
-  waveAmplitude = 0.09; // how tall the waves are
-  waveFrequency = 0.01; // how frequent the waves are (smaller = smoother)
-
   constructor(effect, x, y) {
     this.effect = effect;
+    this.waveAmplitude = effect.waveAmplitude;
+    this.waveFrequency = effect.waveFrequency;
     this.x = x;
     this.y = y;
   }
