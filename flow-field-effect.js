@@ -5,8 +5,8 @@ export default class FlowFieldEffect {
   // 1. base vector fields
   flowField = [];
   cellSize = 5;
-  waveAmplitude = 0.09; // how tall the waves are
-  waveFrequency = 0.01; // how frequent the waves are (smaller = smoother)
+  waveAmplitude = 0.05; // how tall the waves are
+  waveFrequency = 0.02; // how frequent the waves are (smaller = smoother)
 
   // 2. particle generation fields
   particleCount = 3000;

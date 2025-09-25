@@ -13,18 +13,34 @@ export default class Particle {
     this.x = this.startingX;
     this.y = this.startingY;
     this.history = [{ x: this.x, y: this.y }];
+    this.color = getRandomColor();
   }
 
   // --------------
   draw() {
-    // drawing the line based on history
-    this.context.beginPath();
-    this.context.lineWidth = this.particleWidth;
     this.context.lineCap = "round";
     this.context.lineJoin = "round";
-    this.context.globalAlpha = 0.5;
-    this.context.moveTo(this.history[0].x, this.history[0].y);
-    for (let i = 0; i < this.history.length; i++) {
+    this.context.lineWidth = 2;
+
+    // GRADIENT
+    const first = this.history[0];
+    const last = this.history[this.history.length - 1];
+
+    // gradient from tail (transparent) to head (opaque)
+    const gradient = this.context.createLinearGradient(
+      first.x,
+      first.y,
+      last.x,
+      last.y
+    );
+    gradient.addColorStop(0, this.color.replace("1.0)", "0.2)")); // tail transparent
+    gradient.addColorStop(1, this.color.replace("1.0)", "0.6)")); // head opaque
+
+    this.context.strokeStyle = gradient;
+
+    this.context.beginPath();
+    this.context.moveTo(first.x, first.y);
+    for (let i = 1; i < this.history.length; i++) {
       this.context.lineTo(this.history[i].x, this.history[i].y);
     }
     this.context.stroke();
@@ -92,4 +108,28 @@ export default class Particle {
     this.history = [{ x: this.x, y: this.y }];
     this.timer = this.maxLength * 2;
   }
+}
+
+function getRandomColor() {
+  const colors = [
+    // Deep Blues
+    "rgba(18, 63, 119, 1.0)", // Dark blue from Starry Night Over the Rhône
+    "rgba(42, 62, 131, 1.0)", // A dark blue
+    "rgba(23, 54, 121, 1.0)", // St. Patrick's Blue
+
+    // Lighter Blues
+    "rgba(72, 136, 200, 1.0)", // Cyan-Blue Azure
+    "rgba(127, 197, 220, 1.0)", // Dark Sky Blue
+
+    // Yellows
+    "rgba(255, 238, 80, 1.0)", // A bright yellow
+    "rgba(245, 219, 55, 1.0)", // A russet gold
+    "rgba(255, 222, 56, 1.0)", // A deeper yellow
+
+    // Greens and Whites
+    "rgba(82, 135, 131, 1.0)", // Green-bronze
+    "rgba(255, 255, 255, 1.0)", // White
+  ];
+  const randomIndex = Math.floor(Math.random() * colors.length);
+  return colors[randomIndex];
 }
