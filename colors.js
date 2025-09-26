@@ -16,7 +16,7 @@ export default class Colors {
     ],
     highlight: [
       "rgba(82, 135, 131, 1.0)", // #528783
-      "rgba(122, 201, 224, 1.0)", // #7ac9e0
+      /* "rgba(122, 201, 224, 1.0)", // #7ac9e0 */
       "rgba(236, 204, 44, 1.0)", // #f6f7b1
       "rgba(255, 255, 255, 1.0)", // White
       /* "rgba(0, 0, 0, 1.0)", */ // Black
@@ -35,11 +35,7 @@ export default class Colors {
     return arr[Math.floor(Math.random() * arr.length)];
   }
 
-  get yellowCore() {
-    return this.colors.yellow[1];
-  }
-
-  get blueCore() {
-    return this.colors.blue[3];
+  get windHighlight() {
+    return "rgba(81, 173, 224, 1.0)";
   }
 }

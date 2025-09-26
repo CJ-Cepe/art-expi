@@ -5,7 +5,12 @@ export default class Particle {
   timer = Math.floor(Math.random() * this.maxLength * 2);
   particleWidth = 1;
   speed = 5;
-  colors = new Colors();
+
+  // colors
+  palette = new Colors();
+  originalColor = this.palette.getRandomColor();
+  currentColor = this.originalColor;
+  changeCounter = 1;
 
   constructor(effect, px, py) {
     this.effect = effect;
@@ -15,7 +20,6 @@ export default class Particle {
     this.x = this.startingX;
     this.y = this.startingY;
     this.history = [{ x: this.x, y: this.y }];
-    this.color = this.colors.getRandomColor();
   }
 
   // --------------
@@ -25,7 +29,7 @@ export default class Particle {
     this.context.lineWidth = 5;
 
     // GRADIENT
-    let baseColor = this.color;
+    let baseColor = this.currentColor;
     const gradient = this.context.createLinearGradient(
       this.history[0].x,
       this.history[0].y,
@@ -128,7 +132,7 @@ export default class Particle {
 
         if (distance <= innerRadius) {
           // inner Core - solid color
-          this.color = `rgba(${coreR}, ${coreG}, ${coreB}, 1.0)`;
+          this.currentColor = `rgba(${coreR}, ${coreG}, ${coreB}, 1.0)`;
         } else {
           // inner to outer radius - blended zone (interpolation)
           const t =
@@ -138,11 +142,18 @@ export default class Particle {
           const g = edgeG + (coreG - edgeG) * t;
           const b = edgeB + (coreB - edgeB) * t;
 
-          this.color = `rgba(${Math.round(r)}, ${Math.round(g)}, ${Math.round(
-            b
-          )}, 1.0)`;
+          this.currentColor = `rgba(${Math.round(r)}, ${Math.round(
+            g
+          )}, ${Math.round(b)}, 1.0)`;
         }
         break;
+      } else if (distance <= curlPoint.radius) {
+        if (Math.random() < 1 && this.changeCounter) {
+          this.currentColor = this.palette.windHighlight;
+        }
+        this.changeCounter = 0;
+      } else if (distance > curlPoint.radius) {
+        this.currentColor = this.originalColor;
       }
     }
   }
