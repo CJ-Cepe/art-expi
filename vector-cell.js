@@ -75,6 +75,6 @@ export default class VectorCell {
   }
 
   createPerpendicularVector(x, y, rotateClockwise) {
-    return rotateClockwise ? { x: y, y: -x } : { x: -y, y: x };
+    return rotateClockwise ? { x: -y, y: x } : { x: y, y: -x };
   }
 }
