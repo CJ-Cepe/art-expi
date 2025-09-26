@@ -1,10 +1,11 @@
+import Colors from "./colors.js";
+
 export default class Particle {
   maxLength = Math.floor(Math.random() * (30 - 10 + 1)) + 50;
-  maxTimer = Math.floor(Math.random() * this.maxLength * 2);
-  timer = this.maxTimer;
+  timer = Math.floor(Math.random() * this.maxLength * 2);
   particleWidth = 1;
-  vx = 5;
-  vy = 5;
+  speed = 5;
+  colors = new Colors();
 
   constructor(effect, px, py) {
     this.effect = effect;
@@ -14,14 +15,14 @@ export default class Particle {
     this.x = this.startingX;
     this.y = this.startingY;
     this.history = [{ x: this.x, y: this.y }];
-    this.color = getRandomColor();
+    this.color = this.colors.getRandomColor();
   }
 
   // --------------
   draw() {
     this.context.lineCap = "round";
     this.context.lineJoin = "round";
-    this.context.lineWidth = 4;
+    this.context.lineWidth = 5;
 
     // GRADIENT
     let baseColor = this.color;
@@ -41,6 +42,14 @@ export default class Particle {
       this.context.lineTo(this.history[i].x, this.history[i].y);
     }
     this.context.stroke();
+  }
+
+  // --------------
+  reset() {
+    this.x = this.startingX;
+    this.y = this.startingY;
+    this.history = [{ x: this.x, y: this.y }];
+    this.timer = Math.floor(Math.random() * this.maxLength * 2);
   }
 
   // --------------
@@ -81,8 +90,8 @@ export default class Particle {
         }
 
         // apply to particle
-        this.x += vector.x * this.vx;
-        this.y += vector.y * this.vy;
+        this.x += vector.x * this.speed;
+        this.y += vector.y * this.speed;
       }
 
       // push new x and y
@@ -92,21 +101,21 @@ export default class Particle {
         this.history.shift();
       }
 
-      // SET COLOR
+      // SETTING CURL COLOR -------------
       for (const curlPoint of this.effect.curlPoints) {
+        // compute distance
         const curlPointX = curlPoint.x * this.effect.width;
         const curlPointY = curlPoint.y * this.effect.height;
-
         const distance = Math.hypot(this.x - curlPointX, this.y - curlPointY);
 
-        // If within the inner radius, set to a bright color
-        if (distance <= curlPoint.innerRadius) {
-          this.color = "rgba(255, 238, 80, 1.0)";
+        // 1. for curls that are star
+        if (distance <= curlPoint.innerRadius && curlPoint.isStar) {
+          this.color = this.colors.yellowCore; // inner core
           break;
-        } else if (distance <= curlPoint.radius) {
+        } else if (distance <= curlPoint.radius && curlPoint.isStar) {
           //blended color calc
           if (distance <= curlPoint.innerRadius) {
-            this.color = "rgba(255, 238, 80, 1.0)"; // Bright yellow
+            this.color = this.colors.yellowCore; // inner core
             break;
           } else if (distance <= curlPoint.radius) {
             const t =
@@ -119,11 +128,34 @@ export default class Particle {
             const b = 200 + (80 - 200) * t; // 200→80
             this.color = `rgba(${r}, ${g}, ${b}, 1.0)`;
           } else {
-            //this.color = "rgba(18, 63, 119, 1.0)"; // Dark blue
+            this.color = "rgba(18, 63, 119, 1.0)"; // Dark blue
           }
           break;
-        } else {
-          //this.color = "rgba(18, 63, 119, 1.0)";
+        }
+
+        // 2. for curls that are not start -> wind
+        if (distance <= curlPoint.innerRadius && !curlPoint.isStar) {
+          this.color = this.colors.blueCore; // inner core
+          break;
+        } else if (distance <= curlPoint.radius && !curlPoint.isStar) {
+          //blended color calc
+          if (distance <= curlPoint.innerRadius) {
+            this.color = this.colors.blueCore; // inner core
+            break;
+          } else if (distance <= curlPoint.radius) {
+            const t =
+              1 -
+              (distance - curlPoint.innerRadius) /
+                (curlPoint.radius - curlPoint.innerRadius);
+            // interpolate between yellow (center) and blue (edge)
+            const r = 72 + (255 - 72) * t; // 72→255
+            const g = 136 + (238 - 136) * t; // 136→238
+            const b = 200 + (80 - 200) * t; // 200→80
+            this.color = `rgba(${r}, ${g}, ${b}, 1.0)`;
+          } else {
+            this.color = "rgba(18, 63, 119, 1.0)"; // Dark blue
+          }
+          break;
         }
       }
     } else if (this.history.length > 1) {
@@ -132,46 +164,4 @@ export default class Particle {
       this.reset();
     }
   }
-
-  // --------
-  reset() {
-    this.x = this.startingX;
-    this.y = this.startingY;
-    this.history = [{ x: this.x, y: this.y }];
-    this.timer = this.maxTimer;
-  }
-}
-
-function getRandomColor() {
-  const colors = {
-    blueColors: [
-      "rgba(23, 31, 52, 1.0)", // #171f34ff
-      "rgba(7, 9, 115, 1.0)", // #070973
-      "rgba(29, 54, 110, 1.0)", // #1d366e
-      "rgba(50, 67, 119, 1.0)", // #324377
-      "rgba(81, 173, 224, 1.0)", // #51ade0
-      "rgba(122, 201, 224, 1.0)", // #7ac9e0
-      "rgba(119, 148, 204, 1.0)", // #7794cc
-    ],
-    yellowColors: [
-      "rgba(241, 172, 33, 1.0)", // #f1ac21
-      "rgba(236, 204, 44, 1.0)", // #eccc2c
-      "rgba(246, 247, 177, 1.0)", // #f6f7b1
-    ],
-    otherColors: [
-      "rgba(250, 145, 0, 1.0)", // #fa9100
-      "rgba(82, 135, 131, 1.0)", // Green-bronze
-      "rgba(255, 255, 255, 1.0)", // White
-      "rgba(0, 0, 0, 1.0)", // Black
-    ],
-  };
-
-  const roll = Math.random();
-  if (roll < 0.5) return pickRandom(colors.blueColors);
-  if (roll < 0.8) return pickRandom(colors.otherColors);
-  return pickRandom(colors.yellowColors);
-}
-
-function pickRandom(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
 }

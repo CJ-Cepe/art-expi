@@ -14,8 +14,8 @@ export default class FlowFieldEffect {
   jitter = 2;
 
   // 3. particle movement fields
-  flowStrength = 0.1;
-  maxStrength = 0.5;
+  flowStrength = 0.15;
+  maxStrength = 0.15;
 
   constructor(context) {
     this.canvas = context.canvas;
@@ -24,72 +24,17 @@ export default class FlowFieldEffect {
     this.width = this.canvas.width;
     this.rows = Math.ceil(this.height / this.cellSize);
     this.cols = Math.ceil(this.width / this.cellSize);
-    // TODO: fix clockwise
     this.curlPoints = [
-      /* 
-      {
-        x: 0.8,
-        y: 0.2,
-        innerRadius: 80,
-        radius: 100,
-        falloffExponent: 1,
-        curlScale: 0.4,
-        rotateClockwise: true,
-      },
-      {
-        x: 0.6,
-        y: 0.5,
-        innerRadius: 50,
-        radius: 80,
-        falloffExponent: 2,
-        curlScale: 0.4,
-        rotateClockwise: false,
-      },
       {
         x: 0.5,
-        y: 0.2,
-        innerRadius: 50,
-        radius: 100,
-        falloffExponent: 1,
-        curlScale: 0.3,
-        rotateClockwise: false,
-      },
-      {
-        x: 0.9,
-        y: 0.75,
-        innerRadius: 50,
-        radius: 100,
-        falloffExponent: 1,
-        curlScale: 0.3,
-        rotateClockwise: false,
-      },
-      {
-        x: 0.1,
-        y: 0.2,
-        innerRadius: 30,
-        radius: 60,
-        falloffExponent: 1,
-        curlScale: 0.3,
-        rotateClockwise: false,
-      },
-      {
-        x: 0.3,
         y: 0.5,
-        innerRadius: 50,
-        radius: 300,
+        innerRadius: 100,
+        radius: 200,
         falloffExponent: 2,
-        curlScale: 0.005,
-        rotateClockwise: false,
-      },
-      {
-        x: 0.45,
-        y: 0.65,
-        innerRadius: 50,
-        radius: 100,
-        falloffExponent: 2,
-        curlScale: 0.01,
+        curlScale: 0.4,
         rotateClockwise: true,
-      }, */
+        isStar: false,
+      },
     ];
   }
 
