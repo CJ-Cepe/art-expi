@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>art-expi 🎨</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <script>
+      (() => {
+        var x = class {
+          colors = {
+            base: [
+              "rgba(7, 9, 115, 1.0)",
+              "rgba(18, 63, 119, 1.0)",
+              "rgba(24, 47, 92, 1.0)",
+              "rgba(40, 89, 156, 1.0)",
+              "rgba(32, 72, 156, 1.0)",
+              "rgba(21, 52, 121, 1.0)",
+            ],
+            midtones: [
+              "rgba(30, 64, 88, 1.0)",
+              "rgba(77, 115, 143, 1.0)",
+              "rgba(66, 122, 161, 1.0)",
+              "rgba(72, 136, 200, 1.0)",
+            ],
+            highlights: [
+              "rgba(236, 204, 44, 1.0)",
+              "rgba(191, 253, 200, 1.0)",
+              "rgba(98, 23, 228, 1.0)",
+            ],
+            windCurl: [
+              "rgba(255, 255, 255, 1.0)",
+              "rgba(81, 173, 224, 1.0)",
+              "rgba(122, 201, 224, 1.0)",
+              "rgba(119, 148, 204, 1.0)",
+            ],
+            starCurl: ["rgba(250, 145, 0, 1.0)", "rgba(246, 247, 177, 1.0)"],
+          };
+          getRandomColor() {
+            let t = Math.random();
+            return t < 0.7
+              ? this._pickRandom(this.colors.base)
+              : t < 0.9
+              ? this._pickRandom(this.colors.midtones)
+              : this._pickRandom(this.colors.highlights);
+          }
+          get windCurl() {
+            return this._pickRandom(this.colors.windCurl);
+          }
+          get starCurl() {
+            let t = this._toRgbArray(this.colors.starCurl[0]),
+              i = this._toRgbArray(this.colors.starCurl[1]);
+            return { inner: t, outer: i };
+          }
+          _pickRandom(t) {
+            return t[Math.floor(Math.random() * t.length)];
+          }
+          _toRgbArray(t) {
+            return t.match(/\d+/g).slice(0, 3).map(Number);
+          }
+        };
+        var y = class {
+          maxLength = Math.floor(Math.random() * 41) + 20;
+          minTime = 30;
+          maxTime = 150;
+          timer =
+            Math.floor(Math.random() * (this.maxTime - this.minTime + 1)) +
+            this.minTime;
+          particleWidth = Math.floor(Math.random() * 4) + 2;
+          speed = 4;
+          palette = new x();
+          originalColor = this.palette.getRandomColor();
+          currentColor = this.originalColor;
+          changeCounter = 1;
+          constructor(t, i, e) {
+            (this.effect = t),
+              (this.context = t.context),
+              (this.startingX = i),
+              (this.startingY = e),
+              (this.x = this.startingX),
+              (this.y = this.startingY),
+              (this.history = [{ x: this.x, y: this.y }]);
+          }
+          draw() {
+            (this.context.lineCap = "round"),
+              (this.context.lineJoin = "round"),
+              (this.context.lineWidth = this.particleWidth);
+            let t = this.currentColor,
+              i = this.context.createLinearGradient(
+                this.history[0].x,
+                this.history[0].y,
+                this.history[this.history.length - 1].x,
+                this.history[this.history.length - 1].y
+              );
+            i.addColorStop(0, t.replace("1.0)", "0)")),
+              i.addColorStop(1, t.replace("1.0)", "1)")),
+              (this.context.strokeStyle = i),
+              this.context.beginPath(),
+              this.context.moveTo(this.history[0].x, this.history[0].y);
+            for (let e = 1; e < this.history.length; e++)
+              this.context.lineTo(this.history[e].x, this.history[e].y);
+            this.context.stroke();
+          }
+          reset() {
+            (this.x = this.startingX),
+              (this.y = this.startingY),
+              (this.history = [{ x: this.x, y: this.y }]),
+              (this.particleWidth = Math.floor(Math.random() * 5) + 2),
+              (this.timer =
+                Math.floor(Math.random() * (this.maxTime - this.minTime + 1)) +
+                this.minTime);
+          }
+          update() {
+            this.timer--,
+              this.timer >= 1
+                ? (this._updatePosition(),
+                  this._updateColor(),
+                  this.history.push({ x: this.x, y: this.y }),
+                  this.history.length > this.maxLength && this.history.shift())
+                : this.history.length > 1
+                ? this.history.shift()
+                : this.reset();
+          }
+          _updatePosition() {
+            let t = Math.floor(this.x / this.effect.cellSize),
+              e =
+                Math.floor(this.y / this.effect.cellSize) * this.effect.cols +
+                t,
+              s = this.effect.flowField[e];
+            if (s) {
+              let r = { x: s.x, y: s.y },
+                a = Math.hypot(r.x, r.y);
+              (this.currentForceMag = a), a > 0 && ((r.x /= a), (r.y /= a));
+              let c = this.effect.flowStrength ?? 1;
+              (r.x *= c), (r.y *= c);
+              let n = this.effect.maxStrength ?? 2,
+                l = Math.hypot(r.x, r.y);
+              l > n && ((r.x = (r.x / l) * n), (r.y = (r.y / l) * n)),
+                (this.x += r.x * this.speed),
+                (this.y += r.y * this.speed);
+            }
+          }
+          _updateColor() {
+            let t = !1;
+            for (let i of this.effect.curlPoints) {
+              let e = i.x * this.effect.width,
+                s = i.y * this.effect.height,
+                r = Math.hypot(this.x - e, this.y - s);
+              if (r <= i.radius) {
+                if (i.isStar) {
+                  let [a, c, n] = this.palette.starCurl.inner,
+                    [l, o, f] = this.palette.starCurl.outer;
+                  if (r <= i.innerRadius)
+                    this.currentColor = `rgba(${a}, ${c}, ${n}, 1.0)`;
+                  else {
+                    let d =
+                        1 - (r - i.innerRadius) / (i.radius - i.innerRadius),
+                      g = l + (a - l) * d,
+                      u = o + (c - o) * d,
+                      m = f + (n - f) * d;
+                    this.currentColor = `rgba(${Math.round(g)}, ${Math.round(
+                      u
+                    )}, ${Math.round(m)}, 1.0)`;
+                  }
+                } else
+                  this.changeCounter &&
+                    Math.random() < 0.7 &&
+                    (this.currentColor = this.palette.windCurl),
+                    (this.changeCounter = 0);
+                t = !0;
+                break;
+              }
+            }
+            t ||
+              ((this.currentColor = this.originalColor),
+              (this.changeCounter = 1));
+          }
+        };
+        var p = class {
+          constructor(t, i, e) {
+            (this.effect = t),
+              (this.waveAmplitude = t.waveAmplitude),
+              (this.waveFrequency = t.waveFrequency),
+              (this.x = i),
+              (this.y = e);
+          }
+          calculateVector() {
+            let {
+                cellSize: t,
+                width: i,
+                height: e,
+                curlPoints: s,
+                flowStrength: r,
+              } = this.effect,
+              a = this.x * t + t / 2,
+              c = this.y * t + t / 2,
+              n = { x: 0, y: 0 };
+            for (let o of s) {
+              let f = o.x * i,
+                d = o.y * e,
+                g = Math.hypot(a - f, c - d),
+                u = 0;
+              if (g < o.innerRadius) u = 1;
+              else if (g < o.radius) {
+                let m = (g - o.innerRadius) / (o.radius - o.innerRadius);
+                u = Math.pow(1 - m, o.falloffExponent);
+              }
+              if (u > 0) {
+                let m = a - f,
+                  k = c - d,
+                  C = this.createPerpendicularVector(m, k, o.rotateClockwise);
+                (n.x += C.x * o.curlScale * u), (n.y += C.y * o.curlScale * u);
+              }
+            }
+            let l = {
+              x: r,
+              y: -Math.sin(a * this.waveFrequency) * this.waveAmplitude,
+            };
+            return { x: l.x + n.x, y: l.y + n.y };
+          }
+          createPerpendicularVector(t, i, e) {
+            return e ? { x: -i, y: t } : { x: i, y: -t };
+          }
+        };
+        var w = class {
+          flowField = [];
+          cellSize = 5;
+          waveAmplitude = 0.1;
+          waveFrequency = 0.01;
+          particleCount = 3e3;
+          particles = [];
+          jitter = 2;
+          flowStrength = 0.15;
+          maxStrength = 2;
+          constructor(t, i, e) {
+            (this.canvas = t.canvas),
+              (this.context = t),
+              (this.height = e),
+              (this.width = i),
+              (this.rows = Math.ceil(this.height / this.cellSize)),
+              (this.cols = Math.ceil(this.width / this.cellSize)),
+              (this.animationFrameId = null),
+              (this.curlPoints = [
+                {
+                  x: 0.1,
+                  y: 0.2,
+                  innerRadius: 10,
+                  radius: 80,
+                  falloffExponent: 4,
+                  curlScale: 0.9,
+                  rotateClockwise: !0,
+                  isStar: !0,
+                },
+                {
+                  x: 0.25,
+                  y: 0.1,
+                  innerRadius: 20,
+                  radius: 40,
+                  falloffExponent: 4,
+                  curlScale: 0.9,
+                  rotateClockwise: !0,
+                  isStar: !0,
+                },
+                {
+                  x: 0.12,
+                  y: 0.6,
+                  innerRadius: 20,
+                  radius: 50,
+                  falloffExponent: 4,
+                  curlScale: 0.9,
+                  rotateClockwise: !0,
+                  isStar: !0,
+                },
+                {
+                  x: 0.55,
+                  y: 0.2,
+                  innerRadius: 10,
+                  radius: 90,
+                  falloffExponent: 4,
+                  curlScale: 0.9,
+                  rotateClockwise: !0,
+                  isStar: !0,
+                },
+                {
+                  x: 0.65,
+                  y: 0.43,
+                  innerRadius: 10,
+                  radius: 50,
+                  falloffExponent: 4,
+                  curlScale: 0.9,
+                  rotateClockwise: !0,
+                  isStar: !0,
+                },
+                {
+                  x: 0.85,
+                  y: 0.3,
+                  innerRadius: 80,
+                  radius: 125,
+                  falloffExponent: 4,
+                  curlScale: 0.9,
+                  rotateClockwise: !1,
+                  isStar: !0,
+                },
+                {
+                  x: 0.75,
+                  y: 0.8,
+                  innerRadius: 10,
+                  radius: 80,
+                  falloffExponent: 4,
+                  curlScale: 0.9,
+                  rotateClockwise: !1,
+                  isStar: !0,
+                },
+                {
+                  x: 0.35,
+                  y: 0.5,
+                  innerRadius: 10,
+                  radius: 220,
+                  falloffExponent: 4,
+                  curlScale: 0.5,
+                  rotateClockwise: !0,
+                  isStar: !1,
+                },
+                {
+                  x: 0.5,
+                  y: 0.75,
+                  innerRadius: 10,
+                  radius: 130,
+                  falloffExponent: 3,
+                  curlScale: 0.5,
+                  rotateClockwise: !1,
+                  isStar: !1,
+                },
+              ]);
+          }
+          init() {
+            this.generateParticles(), this.generateVectorField();
+          }
+          generateParticles() {
+            this.particles = [];
+            let t = [];
+            for (let e = 0; e < this.rows; e++)
+              for (let s = 0; s < this.cols; s++) t.push({ x: s, y: e });
+            for (let e = t.length - 1; e > 0; e--) {
+              let s = Math.floor(Math.random() * (e + 1));
+              [t[e], t[s]] = [t[s], t[e]];
+            }
+            let i = this.cellSize * this.jitter;
+            for (let e = 0; e < this.particleCount && e < t.length; e++) {
+              let s = t[e],
+                r = s.x * this.cellSize + Math.random() * i,
+                a = s.y * this.cellSize + Math.random() * i;
+              this.particles.push(new y(this, r, a));
+            }
+          }
+          generateVectorField() {
+            this.flowField = [];
+            for (let t = 0; t < this.rows; t++)
+              for (let i = 0; i < this.cols; i++) {
+                let s = new p(this, i, t).calculateVector();
+                this.flowField.push(s);
+              }
+          }
+          render() {
+            this.context.clearRect(0, 0, this.canvas.width, this.canvas.height),
+              this.particles.forEach((t) => {
+                t.draw(), t.update();
+              }),
+              (this.animationFrameId = requestAnimationFrame(
+                this.render.bind(this)
+              ));
+          }
+          stop() {
+            this.animationFrameId !== null &&
+              (cancelAnimationFrame(this.animationFrameId),
+              (this.animationFrameId = null));
+          }
+        };
+        var S = `* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0)),
+    linear-gradient(0deg, rgba(31, 16, 16, 0.7), rgba(19, 16, 31, 0)),
+    linear-gradient(315deg, rgb(19, 17, 31), rgb(10, 10, 0));
+  /* background-color: black; */
+  height: 100vh;
+}
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+`;
+        var R = document.createElement("style");
+        R.textContent = S;
+        document.head.appendChild(R);
+        var b, M;
+        function v(h) {
+          b && b.stop();
+          let t = h.canvas,
+            i = window.innerWidth,
+            e = window.innerHeight;
+          (t.width = i),
+            (t.height = e),
+            (b = new w(h, i, e)),
+            b.init(),
+            b.render();
+        }
+        var P = (h) => {
+          clearTimeout(M),
+            (M = setTimeout(() => {
+              v(h);
+            }, 250));
+        };
+        window.onload = async function () {
+          let t = document.querySelector("canvas").getContext("2d");
+          v(t),
+            window.addEventListener("resize", () => {
+              P(t);
+            });
+        };
+      })();
+    </script>
+  </body>
+</html>
