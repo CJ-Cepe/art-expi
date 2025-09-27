@@ -4,9 +4,9 @@ import VectorCell from "./vector-cell.js";
 export default class FlowFieldEffect {
   // 1. base vector fields
   flowField = [];
-  cellSize = 20;
-  waveAmplitude = 0.05; // how tall the waves are
-  waveFrequency = 0.02; // how frequent the waves are (smaller = smoother)
+  cellSize = 5;
+  waveAmplitude = 0.1; // how tall the waves are
+  waveFrequency = 0.01; // how frequent the waves are (smaller = smoother)
 
   // 2. particle generation fields
   particleCount = 3000;
@@ -15,7 +15,7 @@ export default class FlowFieldEffect {
 
   // 3. particle movement fields
   flowStrength = 0.15;
-  maxStrength = 0.15;
+  maxStrength = 2;
 
   constructor(context) {
     this.canvas = context.canvas;
@@ -28,12 +28,22 @@ export default class FlowFieldEffect {
       {
         x: 0.5,
         y: 0.5,
-        innerRadius: 100,
-        radius: 200,
-        falloffExponent: 2,
-        curlScale: 0.4,
+        innerRadius: 10,
+        radius: 210,
+        falloffExponent: 4,
+        curlScale: 0.9,
         rotateClockwise: true,
         isStar: false,
+      },
+      {
+        x: 0.7,
+        y: 0.2,
+        innerRadius: 10,
+        radius: 100,
+        falloffExponent: 4,
+        curlScale: 0.9,
+        rotateClockwise: true,
+        isStar: true,
       },
     ];
   }

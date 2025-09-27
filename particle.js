@@ -2,9 +2,13 @@ import Colors from "./colors.js";
 
 export default class Particle {
   //TODO: to edit
-  maxLength = Math.floor(Math.random() * (30 - 10 + 1)) + 50;
-  timer = Math.floor(Math.random() * this.maxLength * 2);
-  particleWidth = 4;
+  maxLength = Math.floor(Math.random() * 51) + 20; // length 0f 20 - 50
+  minTime = 60; // 1 second minimum
+  maxTime = 150; // 2.5 seconds maximum
+  timer =
+    Math.floor(Math.random() * (this.maxTime - this.minTime + 1)) +
+    this.minTime;
+  particleWidth = Math.floor(Math.random() * 5) + 2;
   speed = 4;
 
   // colors
@@ -54,8 +58,10 @@ export default class Particle {
     this.x = this.startingX;
     this.y = this.startingY;
     this.history = [{ x: this.x, y: this.y }];
-    /* this.changeCounter = 1; */
-    this.timer = Math.floor(Math.random() * this.maxLength * 2);
+    this.particleWidth = Math.floor(Math.random() * 5) + 2;
+    this.timer =
+      Math.floor(Math.random() * (this.maxTime - this.minTime + 1)) +
+      this.minTime;
   }
 
   // --------------
