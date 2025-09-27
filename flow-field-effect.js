@@ -17,13 +17,14 @@ export default class FlowFieldEffect {
   flowStrength = 0.15;
   maxStrength = 2;
 
-  constructor(context) {
+  constructor(context, width, height) {
     this.canvas = context.canvas;
     this.context = context;
-    this.height = this.canvas.height;
-    this.width = this.canvas.width;
+    this.height = height;
+    this.width = width;
     this.rows = Math.ceil(this.height / this.cellSize);
     this.cols = Math.ceil(this.width / this.cellSize);
+    this.animationFrameId = null;
     this.curlPoints = [
       // left stars
       {
@@ -177,6 +178,14 @@ export default class FlowFieldEffect {
       particle.update();
     });
 
-    requestAnimationFrame(this.render.bind(this));
+    this.animationFrameId = requestAnimationFrame(this.render.bind(this));
+  }
+
+  // --------------
+  stop() {
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
   }
 }
