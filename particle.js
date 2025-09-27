@@ -1,17 +1,17 @@
 import Colors from "./colors.js";
 
 export default class Particle {
+  //TODO: to edit
   maxLength = Math.floor(Math.random() * (30 - 10 + 1)) + 50;
   timer = Math.floor(Math.random() * this.maxLength * 2);
   particleWidth = 4;
-  speed = 9;
+  speed = 4;
 
   // colors
   palette = new Colors();
   originalColor = this.palette.getRandomColor();
   currentColor = this.originalColor;
   changeCounter = 1;
-  withinCurl = false;
 
   constructor(effect, px, py) {
     this.effect = effect;
@@ -27,7 +27,7 @@ export default class Particle {
   draw() {
     this.context.lineCap = "round";
     this.context.lineJoin = "round";
-    this.context.lineWidth = 4;
+    this.context.lineWidth = this.particleWidth;
 
     // GRADIENT
     let baseColor = this.currentColor;
@@ -37,8 +37,8 @@ export default class Particle {
       this.history[this.history.length - 1].x,
       this.history[this.history.length - 1].y
     );
-    gradient.addColorStop(0, baseColor.replace("1.0)", "0.0)"));
-    gradient.addColorStop(1, baseColor.replace("1.0)", "0.8)"));
+    gradient.addColorStop(0, baseColor.replace("1.0)", "0)"));
+    gradient.addColorStop(1, baseColor.replace("1.0)", "1)"));
     this.context.strokeStyle = gradient;
 
     this.context.beginPath();
@@ -130,8 +130,8 @@ export default class Particle {
       if (distance <= curlPoint.radius) {
         // Inside a curl
         if (curlPoint.isStar) {
-          let [coreR, coreG, coreB] = [241, 172, 33]; // yellow core
-          let [edgeR, edgeG, edgeB] = [81, 173, 224]; // yellow/white edge
+          let [coreR, coreG, coreB] = this.palette.starCurl.inner; // yellow core
+          let [edgeR, edgeG, edgeB] = this.palette.starCurl.outer; // yellow/white edge
 
           // if within innerRadius or inner to outer radius
           if (distance <= curlPoint.innerRadius) {
@@ -151,8 +151,8 @@ export default class Particle {
             )}, ${Math.round(b)}, 1.0)`;
           }
         } else {
-          if (Math.random() < 0.5 && this.changeCounter) {
-            this.currentColor = this.palette.windHighlight;
+          if (this.changeCounter && Math.random() < 0.7) {
+            this.currentColor = this.palette.windCurl;
           }
           this.changeCounter = 0;
         }
