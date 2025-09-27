@@ -3,14 +3,15 @@ import Colors from "./colors.js";
 export default class Particle {
   maxLength = Math.floor(Math.random() * (30 - 10 + 1)) + 50;
   timer = Math.floor(Math.random() * this.maxLength * 2);
-  particleWidth = 1;
-  speed = 5;
+  particleWidth = 4;
+  speed = 9;
 
   // colors
   palette = new Colors();
   originalColor = this.palette.getRandomColor();
   currentColor = this.originalColor;
   changeCounter = 1;
+  withinCurl = false;
 
   constructor(effect, px, py) {
     this.effect = effect;
@@ -26,7 +27,7 @@ export default class Particle {
   draw() {
     this.context.lineCap = "round";
     this.context.lineJoin = "round";
-    this.context.lineWidth = 5;
+    this.context.lineWidth = 4;
 
     // GRADIENT
     let baseColor = this.currentColor;
@@ -53,6 +54,7 @@ export default class Particle {
     this.x = this.startingX;
     this.y = this.startingY;
     this.history = [{ x: this.x, y: this.y }];
+    /* this.changeCounter = 1; */
     this.timer = Math.floor(Math.random() * this.maxLength * 2);
   }
 
@@ -116,45 +118,54 @@ export default class Particle {
     }
   }
 
-  // ------------
+  // ------------ update color when under influence of a curl
   _updateColor() {
+    let foundCurl = false;
+
     for (const curlPoint of this.effect.curlPoints) {
       const curlPointX = curlPoint.x * this.effect.width;
       const curlPointY = curlPoint.y * this.effect.height;
       const distance = Math.hypot(this.x - curlPointX, this.y - curlPointY);
 
-      // check if the particle is within the radius of this curl point
-      if (distance <= curlPoint.radius && curlPoint.isStar) {
-        const innerRadius = curlPoint.innerRadius;
-        // set inner and outer color
-        let [coreR, coreG, coreB] = [241, 172, 33]; // Yellow Core
-        let [edgeR, edgeG, edgeB] = [81, 173, 224]; // Yellow/White Edge
+      if (distance <= curlPoint.radius) {
+        // Inside a curl
+        if (curlPoint.isStar) {
+          let [coreR, coreG, coreB] = [241, 172, 33]; // yellow core
+          let [edgeR, edgeG, edgeB] = [81, 173, 224]; // yellow/white edge
 
-        if (distance <= innerRadius) {
-          // inner Core - solid color
-          this.currentColor = `rgba(${coreR}, ${coreG}, ${coreB}, 1.0)`;
+          // if within innerRadius or inner to outer radius
+          if (distance <= curlPoint.innerRadius) {
+            this.currentColor = `rgba(${coreR}, ${coreG}, ${coreB}, 1.0)`;
+          } else {
+            const t =
+              1 -
+              (distance - curlPoint.innerRadius) /
+                (curlPoint.radius - curlPoint.innerRadius);
+
+            const r = edgeR + (coreR - edgeR) * t;
+            const g = edgeG + (coreG - edgeG) * t;
+            const b = edgeB + (coreB - edgeB) * t;
+
+            this.currentColor = `rgba(${Math.round(r)}, ${Math.round(
+              g
+            )}, ${Math.round(b)}, 1.0)`;
+          }
         } else {
-          // inner to outer radius - blended zone (interpolation)
-          const t =
-            1 - (distance - innerRadius) / (curlPoint.radius - innerRadius);
-
-          const r = edgeR + (coreR - edgeR) * t;
-          const g = edgeG + (coreG - edgeG) * t;
-          const b = edgeB + (coreB - edgeB) * t;
-
-          this.currentColor = `rgba(${Math.round(r)}, ${Math.round(
-            g
-          )}, ${Math.round(b)}, 1.0)`;
+          if (Math.random() < 0.5 && this.changeCounter) {
+            this.currentColor = this.palette.windHighlight;
+          }
+          this.changeCounter = 0;
         }
-        break;
-      } else if (distance <= curlPoint.radius) {
-        if (Math.random() < 1 && this.changeCounter) {
-          this.currentColor = this.palette.windHighlight;
-        }
-        this.changeCounter = 0;
-      } else if (distance > curlPoint.radius) {
-        this.currentColor = this.originalColor;
+
+        foundCurl = true;
+        break; // stop at the first curl that contains the particle
       }
+    }
+
+    if (!foundCurl) {
+      // default color when not inside any curl
+      this.currentColor = this.originalColor;
+      this.changeCounter = 1;
     }
   }
 }
