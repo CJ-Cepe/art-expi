@@ -1,9 +1,9 @@
 import Colors from "./colors.js";
 
 export default class Particle {
-  maxLength = Math.floor(Math.random() * 41) + 20;
-  minTime = 30;
-  maxTime = 150;
+  maxLength = Math.floor(Math.random() * 21) + 10;
+  minTime = 20;
+  maxTime = 80;
   timer =
     Math.floor(Math.random() * (this.maxTime - this.minTime + 1)) +
     this.minTime;
@@ -27,29 +27,21 @@ export default class Particle {
   }
 
   // --------------
-  draw() {
-    this.context.lineCap = "round";
-    this.context.lineJoin = "round";
-    this.context.lineWidth = this.particleWidth;
+  draw(ctx = this.context) {
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = this.particleWidth;
 
-    // GRADIENT
     let baseColor = this.currentColor;
-    const gradient = this.context.createLinearGradient(
-      this.history[0].x,
-      this.history[0].y,
-      this.history[this.history.length - 1].x,
-      this.history[this.history.length - 1].y
-    );
-    gradient.addColorStop(0, baseColor.replace("1.0)", "0)"));
-    gradient.addColorStop(1, baseColor.replace("1.0)", "1)"));
-    this.context.strokeStyle = gradient;
+    if (this.history.length < 2) return;
+    ctx.strokeStyle = baseColor;
+    ctx.beginPath();
 
-    this.context.beginPath();
-    this.context.moveTo(this.history[0].x, this.history[0].y);
+    ctx.moveTo(this.history[0].x, this.history[0].y);
     for (let i = 1; i < this.history.length; i++) {
-      this.context.lineTo(this.history[i].x, this.history[i].y);
+      ctx.lineTo(this.history[i].x, this.history[i].y);
     }
-    this.context.stroke();
+    ctx.stroke();
   }
 
   // --------------

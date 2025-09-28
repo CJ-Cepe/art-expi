@@ -9,7 +9,7 @@ export default class FlowFieldEffect {
   waveFrequency = 0.01; // how frequent the waves are (smaller = smoother)
 
   // 2. particle generation fields
-  particleCount = 3000;
+  particleCount = 2000; // reduced for performance
   particles = [];
   jitter = 2;
 
@@ -25,6 +25,14 @@ export default class FlowFieldEffect {
     this.rows = Math.ceil(this.height / this.cellSize);
     this.cols = Math.ceil(this.width / this.cellSize);
     this.animationFrameId = null;
+    // trail canvas
+    this.trailCanvas = document.createElement("canvas");
+    this.trailCanvas.width = width;
+    this.trailCanvas.height = height;
+    this.trailCtx = this.trailCanvas.getContext("2d");
+    this.lastFrameTime = 0;
+    this.targetFPS = 30;
+    //curls
     this.curlPoints = [
       // left stars
       {
@@ -171,12 +179,34 @@ export default class FlowFieldEffect {
   }
 
   // --------------
-  render() {
-    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  render(now = 0) {
+    // Throttle to target FPS
+    if (now - this.lastFrameTime < 1000 / this.targetFPS) {
+      this.animationFrameId = requestAnimationFrame(this.render.bind(this));
+      return;
+    }
+    this.lastFrameTime = now;
+
+    // fade the trail canvas slightly to create motion trails
+    this.trailCtx.globalAlpha = 0.15;
+    this.trailCtx.fillStyle = "#000";
+    this.trailCtx.fillRect(
+      0,
+      0,
+      this.trailCanvas.width,
+      this.trailCanvas.height
+    );
+    this.trailCtx.globalAlpha = 1.0;
+
+    // draw particles to trail buffer
     this.particles.forEach((particle) => {
-      particle.draw();
+      particle.draw(this.trailCtx);
       particle.update();
     });
+
+    // draw the trail buffer once to the visible canvas
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.context.drawImage(this.trailCanvas, 0, 0);
 
     this.animationFrameId = requestAnimationFrame(this.render.bind(this));
   }
