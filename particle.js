@@ -7,7 +7,7 @@ export default class Particle {
   timer =
     Math.floor(Math.random() * (this.maxTime - this.minTime + 1)) +
     this.minTime;
-  particleWidth = Math.floor(Math.random() * 4) + 2;
+
   speed = 4;
 
   // colors
@@ -16,7 +16,7 @@ export default class Particle {
   currentColor = this.originalColor;
   changeCounter = 1;
 
-  constructor(effect, px, py) {
+  constructor(effect, px, py, width) {
     this.effect = effect;
     this.context = effect.context;
     this.startingX = px;
@@ -24,16 +24,24 @@ export default class Particle {
     this.x = this.startingX;
     this.y = this.startingY;
     this.history = [{ x: this.x, y: this.y }];
+    this.maxParticleWidth = this._getParticleWidth(width);
+    this.originalParticleWidth =
+      Math.floor(Math.random() * this.maxParticleWidth) + 1;
+    this.particleWidth = this.originalParticleWidth;
   }
 
   // --------------
   draw(ctx = this.context) {
+    // draw the entire trail as a single polyline
+    if (this.history.length < 2) return;
+
+    ctx.save();
+
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.lineWidth = this.particleWidth;
 
     let baseColor = this.currentColor;
-    if (this.history.length < 2) return;
     ctx.strokeStyle = baseColor;
     ctx.beginPath();
 
@@ -42,6 +50,7 @@ export default class Particle {
       ctx.lineTo(this.history[i].x, this.history[i].y);
     }
     ctx.stroke();
+    ctx.restore();
   }
 
   // --------------
@@ -49,7 +58,7 @@ export default class Particle {
     this.x = this.startingX;
     this.y = this.startingY;
     this.history = [{ x: this.x, y: this.y }];
-    this.particleWidth = Math.floor(Math.random() * 5) + 2;
+    this.particleWidth = this.originalParticleWidth;
     this.timer =
       Math.floor(Math.random() * (this.maxTime - this.minTime + 1)) +
       this.minTime;
@@ -163,6 +172,16 @@ export default class Particle {
       // default color when not inside any curl
       this.currentColor = this.originalColor;
       this.changeCounter = 1;
+    }
+  }
+
+  _getParticleWidth(width) {
+    if (width >= 900) {
+      return 4;
+    } else if (width >= 600) {
+      return 3;
+    } else {
+      return 2;
     }
   }
 }

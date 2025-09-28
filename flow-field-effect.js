@@ -9,7 +9,6 @@ export default class FlowFieldEffect {
   waveFrequency = 0.01; // how frequent the waves are (smaller = smoother)
 
   // 2. particle generation fields
-  particleCount = 2000; // reduced for performance
   particles = [];
   jitter = 2;
 
@@ -24,8 +23,9 @@ export default class FlowFieldEffect {
     this.width = width;
     this.rows = Math.ceil(this.height / this.cellSize);
     this.cols = Math.ceil(this.width / this.cellSize);
-    this.animationFrameId = null;
+    this.particleCount = this._setParticlesCount(this.width);
     // trail canvas
+    this.animationFrameId = null;
     this.trailCanvas = document.createElement("canvas");
     this.trailCanvas.width = width;
     this.trailCanvas.height = height;
@@ -161,7 +161,7 @@ export default class FlowFieldEffect {
       const cell = cells[i];
       const px = cell.x * this.cellSize + Math.random() * jitter;
       const py = cell.y * this.cellSize + Math.random() * jitter;
-      this.particles.push(new Particle(this, px, py));
+      this.particles.push(new Particle(this, px, py, this.width));
     }
   }
 
@@ -216,6 +216,19 @@ export default class FlowFieldEffect {
     if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
+    }
+  }
+
+  // --------------
+  _setParticlesCount(width) {
+    if (width >= 1400) {
+      return 3000;
+    } else if (width >= 1000) {
+      return 2500;
+    } else if (width >= 600) {
+      return 2000;
+    } else {
+      return 1500;
     }
   }
 }
