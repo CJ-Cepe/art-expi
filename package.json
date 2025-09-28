@@ -1,0 +1,22 @@
+{
+  "name": "gen-art-1",
+  "version": "1.0.0",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CJ-Cepe/art-expi.git"
+  },
+  "author": "cj-cepe",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CJ-Cepe/art-expi/issues"
+  },
+  "homepage": "https://github.com/CJ-Cepe/art-expi#readme",
+  "description": "",
+  "devDependencies": {
+    "esbuild": "^0.25.10"
+  }
+}
